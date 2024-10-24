@@ -1,10 +1,10 @@
+require('dotenv').config()
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  images: { unoptimized: true },
-};
+  reactStrictMode: true,
+  swcMinify: true,
+  output: 'standalone',
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig
