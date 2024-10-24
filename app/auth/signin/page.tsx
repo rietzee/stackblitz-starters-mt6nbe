@@ -5,14 +5,38 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export default function SignInPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle sign in logic
+    setError('')
+
+    try {
+      const res = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (!res.ok) {
+        const { error } = await res.json()
+        setError(error)
+        return
+      }
+
+      router.push('/dashboard') // Redirect to the dashboard or another page
+    } catch (err) {
+      setError('An unexpected error occurred')
+      console.error('Sign in error:', err)
+    }
   }
 
   return (
@@ -42,6 +66,8 @@ export default function SignInPage() {
               required
             />
           </div>
+          
+          {error && <p className="text-red-500">{error}</p>}
           
           <Button type="submit" className="w-full">Sign In</Button>
         </form>

@@ -1,30 +1,25 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { generateResetToken } from '@/lib/auth'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { sign } from 'jsonwebtoken'
+import { authenticateUser } from '@/lib/auth'
 
-export async function POST(req: Request) {
-  try {
-    const { email } = await req.json()
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const { email, password } = req.body
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-    })
-
-    if (!user) {
-      // Return success even if user doesn't exist for security
-      return NextResponse.json({ message: 'If an account exists, a reset link has been sent' })
-    }
-
-    const token = await generateResetToken(email)
-
-    // TODO: Send email with reset link
-    // For now, just return the token
-    return NextResponse.json({ token })
-  } catch (error) {
-    console.error('Forgot password error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  // Validate and sanitize input
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' })
   }
+
+  // Authenticate user
+  const user = await authenticateUser(email, password)
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid credentials' })
+  }
+
+  // Generate token
+  const token = sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' })
+
+  // Set token in HttpOnly cookie
+  res.setHeader('Set-Cookie', `token=${token}; HttpOnly; Path=/; Max-Age=3600`)
+  res.status(200).json({ message: 'Sign in successful' })
 }

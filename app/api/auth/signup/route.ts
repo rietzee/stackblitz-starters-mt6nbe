@@ -4,7 +4,10 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(req: Request) {
   try {
+    console.log('Received sign-up request')
+
     const { email, password, name } = await req.json()
+    console.log('Request body:', { email, password, name })
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
@@ -12,6 +15,7 @@ export async function POST(req: Request) {
     })
 
     if (existingUser) {
+      console.log('User already exists')
       return NextResponse.json(
         { error: 'User already exists' },
         { status: 400 }
@@ -19,6 +23,7 @@ export async function POST(req: Request) {
     }
 
     const user = await createUser(email, password, name)
+    console.log('User created:', user)
 
     return NextResponse.json(
       { message: 'User created successfully' },
@@ -27,7 +32,7 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('Signup error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error.message },
       { status: 500 }
     )
   }
