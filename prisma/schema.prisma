@@ -13,10 +13,13 @@ model User {
   email         String    @unique
   password      String
   role          Role      @default(USER)
+  balance       Float     @default(0)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   orders        Order[]
   bannedFrom    Product[] @relation("BannedUsers")
+  resetToken    String?   @unique
+  resetTokenExpiry DateTime?
 }
 
 model Product {
@@ -30,6 +33,7 @@ model Product {
   licenses    License[]
   orders      Order[]
   bannedUsers User[]    @relation("BannedUsers")
+  maxPerUser  Int       @default(1)
 }
 
 model License {
